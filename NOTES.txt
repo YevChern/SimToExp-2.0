@@ -1,0 +1,156 @@
+------------------------
+SIMulation to EXPeriment
+------------------------
+
+A program for comparing simulation density results to experimental X-ray and neutron scattering data 
+
+
+** Please turn on dynamic word wrap to view these notes properly **
+
+See below for compilation and running instructions.
+
+-----------------------
+Current version = 2.0.6
+-----------------------
+-> Support for Qt5 was added togather with the support of newer qwt library versions.
+
+-> Minor big fixes
+
+
+-----------------------
+v2.0.5
+-----------------------
+
+-> Can now export the number densities on a "per particle" basis (as well as the previous "elemental"), similar to those used in v1.0.  If the user loads this "per particle" file back in, they can now use 'cmp' files to create the component electron and neutron scattering length densities that correspond to the model of interest to the user. The long term plan is to include common component models automatically, but it is unlikely this will be implemented soon. There is a sample component file for DAPC in the 'input' folder; this file uses deuterium, so make sure to select some non-zero fraction of deuterium, or simply remove it from the '.cmp' file. Please note the names must match between the '.sim' file and the '.cmp' file, and that the naming matches the (particle/residue) names from the gro file.
+
+-> All of the component exports also work now, but the component number densities can't be loaded back in to SIMtoEXP (the ED and NSLD are fine though), use xmgrace or a similar plotting program to look at these afterword.
+
+-> For the trajectory reader: a major memory issue has been addressed.  The trajectory reader used to use nearly 10x the size of the 'xtc' file in memory, that clearly limits the size of trajectories that can be used.  This has been fixed, with the only tradeoff being the file has to be read twice (the first read is quite fast anyway). The trajectory reader now uses a constant amount of memory < 100 MB, and should be able to handle ANY size 'xtc' file.
+
+**NOTE**
+-> previously, the system was cut-off automatically at a set distance beyond the bilayer - this has been removed! It is a difficult problem to determine automatically the bounds of the system. So for the foreseeable future, the user will have to do this manually in the exported file and then and reload it; if it isn't obvious, this should be done PRIOR TO CALCULATING FORM FACTORS! To do this, simply remove the rows of the file that may have artifactual water densities.
+
+-> couple of other minor bugs have been fixed
+
+
+------------------
+v2.0.4
+------------------
+
+Many bug fixes have been made and most importantly, a trajectory reader has been added. It currently only read GROMACS XTC files (and requires the corresponding '.gro' file), but will be expanded to include CHARMM style DCD files as well.
+
+It can also read in lipid simulations that used the MARTINI force field - currently these are of little value as the atomic form factors for the beads use the total electron charge as a point type atomic form factor (and thus ignoring the internal structure of the beads), but work is in progress to deal with this. This work will simultaneously provide the correct neutron scattering lengths for the beads and will leads to the official release of SIMtoEXP v2.0.
+
+NOTE: the sample trajectory for MARTINI in the 'input' folder has its normal along the x-axis, while the atomistic is along the more commonly used z-axis.
+
+Other features/fixes:
+
+-> can now export and save the number density information in the SIMtoEXP format; these can be reloaded, relieving the need to reanalyze the trajectory. Saving of all other tabs (e.g. electron density, form factors) will be coming very soon - this is espcially necessary for plotting in other programs such as xmgrace.
+
+-> For trajectories read by SIMtoEXP, the deuterium fraction can be set in the trajectory info window that pops up. This only adjusts the water and does not effect hydrogen in any other molecule. Eventually, the deuterium levels will be adjustable at any time, but currently they must be set when reading the trajectory.  This has zero effect on the X-ray form factors, but will alter the neutron form factors significantly.
+
+
+------------------
+v2.0.3
+------------------
+
+At this time, the code does some important error checking, but is far from exhaustive and leaves much up to the user. The program could crash, if say, fed incorrect input (i.e. a word instead of a number).  The amount of error checking should increase with time, but as it is a rather time cosuming process it may get put on the backburner.
+
+The manual is also included just for completeness, but it is for version 1.0 (although it says otherwise) and has not been updated, so ignore any and all Tcl/Tk references.  An updated manual will likely come with the full release of v2.0.
+
+Sample data files are included in the 'input' directory, with the following legend for extensions (see manual for more details):
+
+*.sim  -> simulation numerical density data
+*.cmp  -> component file that defines different regions of the molecule using the atoms from *.sim
+*.xff  -> experimental xray form factor data
+*.nff  -> experimental neutron form factor data
+*.edp  -> experimental electron density profile
+*.nsld -> experimental neutron scattering length density profile
+
+There are also three GROMACS simulation files for showing the usage of the new automated trajectory reader.  
+** This is still very much under development and only MARTINI trajectories currently work. **
+
+-----------------
+Changes from v1.0
+-----------------
+
+- the simulation input file format has changed slightly. Again, the '#' symbol is for comments, but now only a single character is necessary (this is true for all input files). Now there are (case insensitive) key words that should be followed by their values:
+
+area [double] => area per lipid
+Nlip [int] => number of lipids in the simulation
+norm [1/0] => '1' for probability densities, '0' for histograms (this will likely change to use words) 
+
+The first two are only necessary if the 'Histogram' version of data entry is used, but it has yet to be implemented. This will be ready for the complete v2.0.  Also - and importantly - the data should be in the same format as v1.0, and follow immediately (on the next line) after a line that has only "Data" (case insensitive).
+
+- all "fix" or "fixed" boxes have been removed; this means that all values for calculating fourier transforms must be added in the boxes provided.  For convenience though, the program initializes with a commonly used setup, with the electron density and neutron scattering length density both set to that of bulk water at 25 C.
+
+- the boxes showing the x/y positions on the plot have been removed (although nice to have, at the moment it is a lot of work for little reward)
+
+- there is now a 'File -> Delete' menu item; anything that has been loaded can also now be deleted.
+
+- all plot curves can be hidden/shown by clicking on their legend button.  All curves default to 'shown', except for the 'Number Densities' plot that defaults to every tenth curve being 'shown'.
+
+- the menu item 'Axis' has been renamed 'Plot', and features zoom in/out for both axes, and 'Fit to plot' that simply reverts to the original size.  The plots autoscale when curves are 'hidden/shown', but a scroll bar needs to be implemented in order to show the non-central portions of the plot when zoomed in.
+
+- when components are loaded, the individual atom number densities are no longer shown. To see them again, the components must be deleted.
+
+- the format of the component files has changed slightly. Now, instead of providing the atoms per group for each component type, the user simply provides the number of groups in the component.  The user needs to count the number of groups in either case (to calculate the atoms/group), but this way they do not need to count the number of atoms as well, which can be quite large.
+
+- an extra minimization algorithm has been added for the scaling of experimental x-ray and neutron form factor data.  This was done to account for the (minor) change in the goodness of fit when the uncertainty is also scaled.  The minimization uses Newton's method to sniff out the local minimum after initially using the scaling factor calculation from v1.0 to make a good first guess.
+
+- to solve the component volumes, new code has been written from scratch to avoid any potential copyright issues.  This version also uses a standard Gaussian elimination method with partial-pivoting, instead of the Gauss-Jordan method, as both have similar time complexities and the former is easier to code.
+
+- each plotting area can now be zoomed in upon by using a selection box via the mouse (i.e. click and drag).  Scroll bars allow the user to see the rest of the plot at the zoom level, but to return to the original, simply go to "Plot -> Fit to plot" in the menu bar.
+
+- possibly other things I have missed!
+
+
+-----------------------
+Compilation and running
+-----------------------
+
+To compile SimToExp you will need the following two libraries installed:
+- Qt a popular C++ GUI library (likely already installed on most boxes) .
+- Qwt - a plotting add-on for Qt .
+
+You can install Qwt just by going to the terminal and type:
+
+sudo apt-get install libqwt-dev
+
+In some repositories qwt may go by name libqwt-qt5-dev, so if libqwt-dev package is not found, just substitute the libqwt-dev name in the command above with libqwt-qt5-dev.
+After the installation of Qwt, go to the directory where you unpacked your SimToExp source code and just type:
+
+qmake SIMtoEXP.pro
+make
+
+This should be it, although if you don't have qmake you can install it with:
+
+sudo apt-get install qt5-qmake
+
+Also, it might need to change Qwt lib name in SIMtoEXP.pro file to be properly detected. If Qwt is not automatically detected during compilation, try changing the following line in the SIMtoEXP.pro file:
+
+LIBS +=  -lgomp -lqwt
+
+to
+
+LIBS +=  -lgomp -lqwt-qt5
+
+NOTE: SimToExp can be compiled with either Qt4 or Qt5. Just make sure that you’re using the Qwt version that is compatible with the Qt version of your choice. You can obtain source code of Qwt version <6.1 and find installation instructions at Qwt website (http://qwt.sourceforge.net/), but do not forget to specify path to Qwt in SIMtoEXP.pro if you install it to non-default directory. In this case, you should add path to Qwt library to LD_LIBRARY_PATH environmental variable to be able to link with Qwt. For example, you can do this by adding following line to your .bashrc file (this file is located in your home directory):
+
+export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:<path to Qwt>/lib"
+
+
+At the moment, no attempt has been made to compile on either a Windows or Mac OS, so if anyone would like to try, please let me know how it goes. This may involve a bit of work, since Qt uses 'qmake' to generate its somewhat complicated makefile (complicated due to macros in the language); I'm not sure if Windows and Mac OSs use the same program, but the file that qmake works off of, simtoexp.pro, has also been included.  For more information on Qt in these environments (you can even compile it for your Android if you like):
+
+Windows: http://qt-project.org/wiki/Support_for_Windows
+
+Mac: http://qt-project.org/wiki/Support_for_Mac_OS_X
+
+
+As mentioned, this project is still under development, so if you have any suggestions please email either Norbert, Bryan or Yevhen:
+
+Norbert.Kucerka@nrc.gc.ca
+yevhen.cherniavskyi@ucalgary.ca
+bryan.holland@ucalgary.ca
+
+although for bugs, you should email Bryan or Yevhen directly. Enjoy and thanks in advance for any and all help!
